@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  replicas: 1 # Garante que haverá sempre uma instância do NGINX rodando
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx-proxy:latest # Nome da imagem que será construída
+          imagePullPolicy: Never # Força o Kubernetes a usar a imagem local
+          ports:
+          - containerPort: 80 # Porta que o container do NGINX expõe
