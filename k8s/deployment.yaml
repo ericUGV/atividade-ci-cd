@@ -14,7 +14,9 @@ spec:
     spec:
       containers:
         - name: atividade
-          image: atividade:latest
-          imagePullPolicy: Never 
+          # ---- ALTERAÇÕES AQUI ----
+          image: 3riccolpo/atividade:latest  
+          imagePullPolicy: IfNotPresent     # Pode ser 'Always'
+          # -------------------------
           ports:
           - containerPort: 3000
