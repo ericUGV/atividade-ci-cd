@@ -20,7 +20,7 @@ jobs:
         id: vars
         run: |
           # !! SUBSTITUA 'seunome' PELO SEU UTILIZADOR DO DOCKERHUB !!
-          echo "IMAGE=seunome/atividade" >> $GITHUB_OUTPUT
+          echo "IMAGE=3riccolpo/atividade" >> $GITHUB_OUTPUT
           echo "TAG_SHA=${{ github.event.workflow_run.head_sha || github.sha }}" | cut -c1-7 >> $GITHUB_OUTPUT
           echo "NAMESPACE=${{ secrets.K8S_NAMESPACE || 'default' }}" >> $GITHUB_OUTPUT
           

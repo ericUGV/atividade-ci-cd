@@ -44,7 +44,7 @@ jobs:
         id: vars
         run: |
           # !! SUBSTITUA 'seunome' PELO SEU UTILIZADOR DO DOCKERHUB !!
-          echo "IMAGE=seunome/atividade" >> $GITHUB_OUTPUT 
+          echo "IMAGE=3riccolpo/atividade" >> $GITHUB_OUTPUT
           echo "TAG_SHA=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
 
       - name: Setup QEMU
