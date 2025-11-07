@@ -24,8 +24,7 @@ jobs:
 
       - name: Install deps
         run: |
-          # Define o diretório de trabalho como 'atividade'
-          cd atividade
+          # O 'cd atividade' FOI REMOVIDO DAQUI
           if [ -f package-lock.json ]; then
             npm ci
           else
@@ -34,8 +33,7 @@ jobs:
         
       - name: Run tests (se tiver)
         run: |
-          cd atividade
-          # AQUI ESTAVA O ERRO DE DIGITAÇÃO (era prep)
+          # O 'cd atividade' FOI REMOVIDO DAQUI
           if npm run | grep -q " test"; then
             npm test
           else
@@ -45,7 +43,7 @@ jobs:
       - name: Set image tags
         id: vars
         run: |
-          # SUBSTITUA 'seunome' PELO SEU UTILIZADOR DO DOCKERHUB
+          # !! SUBSTITUA 'seunome' PELO SEU UTILIZADOR DO DOCKERHUB !!
           echo "IMAGE=seunome/atividade" >> $GITHUB_OUTPUT 
           echo "TAG_SHA=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
 
@@ -64,8 +62,9 @@ jobs:
       - name: Build & Push
         uses: docker/build-push-action@v6
         with:
-          context: ./atividade    
-          file: ./atividade/dockerfile 
+          # CAMINHOS CORRIGIDOS (removido 'atividade/')
+          context: .
+          file: ./dockerfile 
           push: true
           tags: |
             ${{ steps.vars.outputs.IMAGE }}:latest

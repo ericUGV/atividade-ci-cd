@@ -2,7 +2,7 @@ name: CD - Deploy to Kubernetes
 
 on:
   workflow_run:
-    workflows: ["CI Build & Push Docker"] 
+    workflows: ["CI Build & Push Docker"]
     types: [ "completed" ]
 
 permissions:
@@ -10,7 +10,6 @@ permissions:
 
 jobs:
   deploy:
-  
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
@@ -20,7 +19,7 @@ jobs:
       - name: Set vars
         id: vars
         run: |
-          # !! IMPORTANTE: SUBSTITUA 'seunome' PELO SEU UTILIZADOR DO DOCKERHUB !!
+          # !! SUBSTITUA 'seunome' PELO SEU UTILIZADOR DO DOCKERHUB !!
           echo "IMAGE=seunome/atividade" >> $GITHUB_OUTPUT
           echo "TAG_SHA=${{ github.event.workflow_run.head_sha || github.sha }}" | cut -c1-7 >> $GITHUB_OUTPUT
           echo "NAMESPACE=${{ secrets.K8S_NAMESPACE || 'default' }}" >> $GITHUB_OUTPUT
@@ -33,26 +32,24 @@ jobs:
       - name: Configure kubeconfig
         run: |
           mkdir -p $HOME/.kube
-          # Usa o secret KUBE_CONFIG_DATA
           echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 -d > $HOME/.kube/config
 
-    
       - name: Apply base manifests (Service, Prometheus, Grafana, Nginx)
         run: |
-          kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f atividade/k8s/atividade-service.yaml || true
-          kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f atividade/k8s/prometheus-config.yaml || true
-          kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f atividade/k8s/prometheus-deployment.yaml || true
-          kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f atividade/k8s/grafana-deployment.yaml || true
-          kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f atividade/k8s/grafana-service.yaml || true
-          kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f atividade/k8s/nginx-deployment.yaml || true
-          kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f atividade/k8s/nginx-service.yaml || true
+          # CAMINHOS CORRIGIDOS (removido 'atividade/')
+          kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/atividade-service.yaml || true
+          kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/prometheus-config.yaml || true
+          kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/prometheus-deployment.yaml || true
+          kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/grafana-deployment.yaml || true
+          kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/grafana-service.yaml || true
+          kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/nginx-deployment.yaml || true
+          kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/nginx-service.yaml || true
 
-      
       - name: Apply app deployment (first time)
         run: |
-          kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f atividade/k8s/deployment.yaml
+          # CAMINHO CORRIGIDO (removido 'atividade/')
+          kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/deployment.yaml
 
-      
       - name: Set image to new tag
         run: |
           kubectl set image deployment/atividade atividade=${{ steps.vars.outputs.IMAGE }}:${{ steps.vars.outputs.TAG_SHA }} -n ${{ steps.vars.outputs.NAMESPACE }}
