@@ -32,7 +32,7 @@ app.use((req, res, next) => {
 app.get('/', (req, res) => {
     // Incrementa o contador a cada requisição na rota raiz
     counter.inc();
-    res.send('Hello World!');
+    res.send('Hello World! Meu pipeline de CI/CD funciona!');
 });
 
 app.get('/metrics', async (req, res) => {
