@@ -17,40 +17,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Este passo ainda é necessário para obter o nome da imagem
       - name: Set vars
         id: vars
         run: |
-          # !! SUBSTITUA 'seunome' PELO SEU UTILIZADOR DO DOCKERHUB (ex: 3riccolpo) !!
+          # !! IMPORTANTE: SUBSTITUA 'seunome' PELO SEU UTILIZADOR DO DOCKERHUB (ex: 3riccolpo) !!
           echo "IMAGE=seunome/atividade" >> $GITHUB_OUTPUT
           echo "TAG_SHA=$(echo ${{ github.event.workflow_run.head_sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
-          echo "NAMESPACE=${{ secrets.KUBE_NAMESPACE || 'default' }}" >> $GITHUB_OUTPUT
+          echo "NAMESPACE=${{ secrets.K8S_NAMESPACE || 'default' }}" >> $GITHUB_OUTPUT
           
+      # ESTE É O PASSO CORRIGIDO
       - name: Simulating Deploy to Kubernetes
         run: |
           echo "Pipeline de CD executado com sucesso!"
           echo "O cluster local (Minikube) não pode ser acedido a partir do GitHub Actions (nuvem)."
-          echo "Por isso, estamos a simular os passos de deploy:"
-          
-          echo "1. Configurar Kubeconfig... (Simulado)"
-          # O PASSO REAL (AGORA DESATIVADO):
-          # mkdir -p $HOME/.kube
-          # echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 -d > $HOME/.kube/config
-
-          echo "2. Aplicar manifestos base... (Simulado)"
-          # O PASSO REAL (AGORA DESATIVADO):
-          # kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/atividade-service.yaml || true
-          # ... (e todos os outros comandos kubectl apply) ...
-
-          echo "3. Aplicar deploy da app... (Simulado)"
-          # O PASSO REAL (AGORA DESATIVADO):
-          # kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/deployment.yaml
-
-          echo "4. Atualizar a imagem do deployment... (Simulado)"
-          echo "Comando que seria executado:"
-          echo "kubectl set image deployment/atividade atividade=${{ steps.vars.outputs.IMAGE }}:${{ steps.vars.outputs.TAG_SHA }} -n ${{ steps.vars.outputs.NAMESPACE }}"
-          
-          echo "5. Aguardar rollout... (Simulado)"
-          # O PASSO REAL (AGORA DESATIVADO):
-          # kubectl rollout status deployment/atividade -n ${{ steps.vars.outputs.NAMESPACE }} --timeout=120s
-          
+          echo "Por isso, o deploy real foi simulado."
+          echo "---"
+          echo "A imagem que seria implementada é:"
+          echo "Imagem: ${{ steps.vars.outputs.IMAGE }}:${{ steps.vars.outputs.TAG_SHA }}"
+          echo "Namespace: ${{ steps.vars.outputs.NAMESPACE }}"
+          echo "---"
           echo "Deploy simulado concluído com SUCESSO!"
