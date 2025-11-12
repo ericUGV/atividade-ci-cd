@@ -16,16 +16,16 @@ jobs:
     # Executa no seu PC
     runs-on: self-hosted 
     
-    # DEFINE O SHELL PADRÃO PARA POWERSHELL
+    # DEFINE O SHELL PADRÃO PARA POWERSHELL (Windows)
     defaults:
       run:
-        shell: pwsh
+        shell: powershell # <-- AQUI ESTÁ A CORREÇÃO
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # --- ESTE PASSO FOI TRADUZIDO PARA POWERSHELL ---
+      # --- ESTE PASSO ESTÁ TRADUZIDO PARA POWERSHELL ---
       - name: Set vars
         id: vars
         run: |
