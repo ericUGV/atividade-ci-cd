@@ -17,47 +17,51 @@ jobs:
     runs-on: self-hosted 
     
     # --- A MUDANÇA PRINCIPAL ESTÁ AQUI ---
-    # Força o uso do 'bash' (do Git) em vez do 'powershell'
+    # Força o uso do 'cmd' (Command Prompt)
     defaults:
       run:
-        shell: bash
+        shell: cmd
     # ------------------------------------
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # --- ESTE PASSO FOI TRADUZIDO DE VOLTA PARA BASH ---
+      # --- ESTE PASSO FOI TRADUZIDO PARA A SINTAXE DO CMD ---
       - name: Set vars
         id: vars
         run: |
-          # !! IMPORTANTE: SUBSTITUA '3riccolpo' SE O SEU UTILIZADOR DO DOCKERHUB FOR OUTRO !!
-          echo "IMAGE=3riccolpo/atividade" >> $GITHUB_OUTPUT
+          :: !! IMPORTANTE: SUBSTITUA '3riccolpo' SE O SEU UTILIZADOR DO DOCKERHUB FOR OUTRO !!
+          echo IMAGE=3riccolpo/atividade >> %GITHUB_OUTPUT%
 
-          # Lógica corrigida para a TAG_SHA em bash
-          echo "TAG_SHA=$(echo ${{ github.event.workflow_run.head_sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
+          :: Lógica corrigida para a TAG_SHA em CMD (pega os 7 primeiros caracteres)
+          set FULL_SHA=${{ github.event.workflow_run.head_sha }}
+          echo TAG_SHA=%FULL_SHA:~0,7% >> %GITHUB_OUTPUT%
 
-          echo "NAMESPACE=${{ secrets.K8S_NAMESPACE || 'default' }}" >> $GITHUB_OUTPUT
+          :: Define o namespace, usa 'default' se o secret estiver vazio
+          set NS=${{ secrets.K8S_NAMESPACE }}
+          if "%NS%" == "" set NS=default
+          echo NAMESPACE=%NS% >> %GITHUB_OUTPUT%
           
       - name: Apply base manifests (Service, Prometheus, Grafana, Nginx)
         run: |
-          # O Kubectl também funciona perfeitamente no bash
-          kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/atividade-service.yaml
-          kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/prometheus-config.yaml
-          kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/prometheus-deployment.yaml
-          kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/grafana-deployment.yaml
-          kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/grafana-service.yaml
-          kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/nginx-deployment.yaml
-          kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/nginx-service.yaml
+          :: O Kubectl funciona no cmd, mas as variáveis são acedidas com % %
+          kubectl apply -n %NAMESPACE% -f k8s/atividade-service.yaml
+          kubectl apply -n %NAMESPACE% -f k8s/prometheus-config.yaml
+          kubectl apply -n %NAMESPACE% -f k8s/prometheus-deployment.yaml
+          kubectl apply -n %NAMESPACE% -f k8s/grafana-deployment.yaml
+          kubectl apply -n %NAMESPACE% -f k8s/grafana-service.yaml
+          kubectl apply -n %NAMESPACE% -f k8s/nginx-deployment.yaml
+          kubectl apply -n %NAMESPACE% -f k8s/nginx-service.yaml
 
       - name: Apply app deployment (first time)
         run: |
-          kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/deployment.yaml
+          kubectl apply -n %NAMESPACE% -f k8s/deployment.yaml
 
       - name: Set image to new tag
         run: |
-          kubectl set image deployment/atividade atividade=${{ steps.vars.outputs.IMAGE }}:${{ steps.vars.outputs.TAG_SHA }} -n ${{ steps.vars.outputs.NAMESPACE }}
+          kubectl set image deployment/atividade atividade=%IMAGE%:%TAG_SHA% -n %NAMESPACE%
 
       - name: Wait rollout
         run: |
-          kubectl rollout status deployment/atividade -n ${{ steps.vars.outputs.NAMESPACE }} --timeout=120s
+          kubectl rollout status deployment/atividade -n %NAMESPACE% --timeout=120s
