@@ -13,31 +13,37 @@ jobs:
     # Só executa se o CI foi bem-sucedido
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     
-    # --- A MUDANÇA PRINCIPAL ESTÁ AQUI ---
-    # Isto diz ao GitHub para executar este job no SEU PC
+    # Executa no seu PC
     runs-on: self-hosted 
-    # ------------------------------------
+    
+    # DEFINE O SHELL PADRÃO PARA POWERSHELL
+    defaults:
+      run:
+        shell: pwsh
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # --- ESTE PASSO FOI TRADUZIDO PARA POWERSHELL ---
       - name: Set vars
         id: vars
         run: |
           # !! IMPORTANTE: SUBSTITUA '3riccolpo' SE O SEU UTILIZADOR DO DOCKERHUB FOR OUTRO !!
-          echo "IMAGE=3riccolpo/atividade" >> $GITHUB_OUTPUT
-          # Esta é a lógica corrigida para a TAG_SHA
-          echo "TAG_SHA=$(echo ${{ github.event.workflow_run.head_sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
-          echo "NAMESPACE=${{ secrets.K8S_NAMESPACE || 'default' }}" >> $GITHUB_OUTPUT
-          
-      # Não precisamos mais do "Configure kubeconfig" (passo do KUBE_CONFIG_DATA)
-      # porque o "self-hosted runner" (o seu PC) já tem o Minikube
-      # e o kubectl configurados e prontos a usar.
+          $Image = "3riccolpo/atividade"
+          echo "IMAGE=$Image" | Add-Content -Path $env:GITHUB_OUTPUT
 
+          # Lógica corrigida para a TAG_SHA em PowerShell (pega os 7 primeiros caracteres)
+          $TagSha = "${{ github.event.workflow_run.head_sha }}".Substring(0, 7)
+          echo "TAG_SHA=$TagSha" | Add-Content -Path $env:GITHUB_OUTPUT
+
+          $Namespace = "${{ secrets.K8S_NAMESPACE }}"
+          if (-not $Namespace) { $Namespace = "default" }
+          echo "NAMESPACE=$Namespace" | Add-Content -Path $env:GITHUB_OUTPUT
+          
       - name: Apply base manifests (Service, Prometheus, Grafana, Nginx)
         run: |
-          # Estes comandos irão agora correr no seu PowerShell
+          # Estes comandos kubectl funcionam perfeitamente no PowerShell
           kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/atividade-service.yaml
           kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/prometheus-config.yaml
           kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/prometheus-deployment.yaml
@@ -45,7 +51,6 @@ jobs:
           kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/grafana-service.yaml
           kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/nginx-deployment.yaml
           kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/nginx-service.yaml
-        # O '|| true' foi removido para que, se houver um erro real, o pipeline pare.
 
       - name: Apply app deployment (first time)
         run: |

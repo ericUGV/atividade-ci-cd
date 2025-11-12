@@ -1,0 +1,12 @@
+﻿{
+  "repositoryName": "ericUGV/atividade-ci-cd",
+  "pipelineDirectory": "atividade-ci-cd",
+  "workspaceDirectory": "atividade-ci-cd\\atividade-ci-cd",
+  "repositories": {
+    "ericUGV/atividade-ci-cd": {
+      "repositoryPath": "atividade-ci-cd\\atividade-ci-cd",
+      "lastRunOn": "11/12/2025 16:26:25 -03:00"
+    }
+  },
+  "lastRunOn": "11/12/2025 16:26:25 -03:00"
+}
