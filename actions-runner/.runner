@@ -1,0 +1,11 @@
+﻿{
+  "agentId": 21,
+  "agentName": "ERICOMPUTADOR",
+  "poolId": 1,
+  "poolName": "Default",
+  "serverUrl": "https://pipelinesghubeus23.actions.githubusercontent.com/brSoWPOS4ZOk9pbky3MArmM2SYgDOKlqhnLFa1crhFg8EOWrRN/",
+  "gitHubUrl": "https://github.com/ericUGV/atividade-ci-cd",
+  "workFolder": "_work",
+  "useV2Flow": true,
+  "serverUrlV2": "https://broker.actions.githubusercontent.com/"
+}

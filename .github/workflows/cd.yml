@@ -12,29 +12,49 @@ jobs:
   deploy:
     # Só executa se o CI foi bem-sucedido
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    runs-on: ubuntu-latest
+    
+    # --- A MUDANÇA PRINCIPAL ESTÁ AQUI ---
+    # Isto diz ao GitHub para executar este job no SEU PC
+    runs-on: self-hosted 
+    # ------------------------------------
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Este passo ainda é necessário para obter o nome da imagem
       - name: Set vars
         id: vars
         run: |
-          # !! IMPORTANTE: SUBSTITUA 'seunome' PELO SEU UTILIZADOR DO DOCKERHUB (ex: 3riccolpo) !!
-          echo "IMAGE=seunome/atividade" >> $GITHUB_OUTPUT
+          # !! IMPORTANTE: SUBSTITUA '3riccolpo' SE O SEU UTILIZADOR DO DOCKERHUB FOR OUTRO !!
+          echo "IMAGE=3riccolpo/atividade" >> $GITHUB_OUTPUT
+          # Esta é a lógica corrigida para a TAG_SHA
           echo "TAG_SHA=$(echo ${{ github.event.workflow_run.head_sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
           echo "NAMESPACE=${{ secrets.K8S_NAMESPACE || 'default' }}" >> $GITHUB_OUTPUT
           
-      # ESTE É O PASSO CORRIGIDO
-      - name: Simulating Deploy to Kubernetes
+      # Não precisamos mais do "Configure kubeconfig" (passo do KUBE_CONFIG_DATA)
+      # porque o "self-hosted runner" (o seu PC) já tem o Minikube
+      # e o kubectl configurados e prontos a usar.
+
+      - name: Apply base manifests (Service, Prometheus, Grafana, Nginx)
         run: |
-          echo "Pipeline de CD executado com sucesso!"
-          echo "O cluster local (Minikube) não pode ser acedido a partir do GitHub Actions (nuvem)."
-          echo "Por isso, o deploy real foi simulado."
-          echo "---"
-          echo "A imagem que seria implementada é:"
-          echo "Imagem: ${{ steps.vars.outputs.IMAGE }}:${{ steps.vars.outputs.TAG_SHA }}"
-          echo "Namespace: ${{ steps.vars.outputs.NAMESPACE }}"
-          echo "---"
-          echo "Deploy simulado concluído com SUCESSO!"
+          # Estes comandos irão agora correr no seu PowerShell
+          kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/atividade-service.yaml
+          kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/prometheus-config.yaml
+          kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/prometheus-deployment.yaml
+          kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/grafana-deployment.yaml
+          kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/grafana-service.yaml
+          kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/nginx-deployment.yaml
+          kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/nginx-service.yaml
+        # O '|| true' foi removido para que, se houver um erro real, o pipeline pare.
+
+      - name: Apply app deployment (first time)
+        run: |
+          kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/deployment.yaml
+
+      - name: Set image to new tag
+        run: |
+          kubectl set image deployment/atividade atividade=${{ steps.vars.outputs.IMAGE }}:${{ steps.vars.outputs.TAG_SHA }} -n ${{ steps.vars.outputs.NAMESPACE }}
+
+      - name: Wait rollout
+        run: |
+          kubectl rollout status deployment/atividade -n ${{ steps.vars.outputs.NAMESPACE }} --timeout=120s
