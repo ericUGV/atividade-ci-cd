@@ -16,34 +16,32 @@ jobs:
     # Executa no seu PC
     runs-on: self-hosted 
     
-    # DEFINE O SHELL PADRÃO PARA POWERSHELL (Windows)
+    # --- A MUDANÇA PRINCIPAL ESTÁ AQUI ---
+    # Força o uso do 'bash' (do Git) em vez do 'powershell'
     defaults:
       run:
-        shell: powershell # <-- AQUI ESTÁ A CORREÇÃO
+        shell: bash
+    # ------------------------------------
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # --- ESTE PASSO ESTÁ TRADUZIDO PARA POWERSHELL ---
+      # --- ESTE PASSO FOI TRADUZIDO DE VOLTA PARA BASH ---
       - name: Set vars
         id: vars
         run: |
           # !! IMPORTANTE: SUBSTITUA '3riccolpo' SE O SEU UTILIZADOR DO DOCKERHUB FOR OUTRO !!
-          $Image = "3riccolpo/atividade"
-          echo "IMAGE=$Image" | Add-Content -Path $env:GITHUB_OUTPUT
+          echo "IMAGE=3riccolpo/atividade" >> $GITHUB_OUTPUT
 
-          # Lógica corrigida para a TAG_SHA em PowerShell (pega os 7 primeiros caracteres)
-          $TagSha = "${{ github.event.workflow_run.head_sha }}".Substring(0, 7)
-          echo "TAG_SHA=$TagSha" | Add-Content -Path $env:GITHUB_OUTPUT
+          # Lógica corrigida para a TAG_SHA em bash
+          echo "TAG_SHA=$(echo ${{ github.event.workflow_run.head_sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
 
-          $Namespace = "${{ secrets.K8S_NAMESPACE }}"
-          if (-not $Namespace) { $Namespace = "default" }
-          echo "NAMESPACE=$Namespace" | Add-Content -Path $env:GITHUB_OUTPUT
+          echo "NAMESPACE=${{ secrets.K8S_NAMESPACE || 'default' }}" >> $GITHUB_OUTPUT
           
       - name: Apply base manifests (Service, Prometheus, Grafana, Nginx)
         run: |
-          # Estes comandos kubectl funcionam perfeitamente no PowerShell
+          # O Kubectl também funciona perfeitamente no bash
           kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/atividade-service.yaml
           kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/prometheus-config.yaml
           kubectl apply -n ${{ steps.vars.outputs.NAMESPACE }} -f k8s/prometheus-deployment.yaml
